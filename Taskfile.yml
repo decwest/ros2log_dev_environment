@@ -1,0 +1,48 @@
+version: '3'
+
+tasks:
+  default:
+    aliases:
+      - list
+    desc: List all tasks
+    cmd: task -l
+  gen-env:
+    desc: generate .env for docker build
+    cmds:
+      - bash -c 'printf "USER=%s\nUID=%s\nGID=%s\nGROUP=%s\n" "$USER" "$(id -u)" "$(id -g)" "$(id -gn)" > .env'
+    silent: true
+  build.rolling:
+    desc: Build docker image, rolling version
+    deps: [gen-env]
+    cmd: docker compose build rolling_gpu
+    silent: true
+  run.rolling.gpu:
+    desc: Run docker container with gpu support, rolling version
+    cmd: docker compose run --rm rolling_gpu
+    silent: true
+  run.rolling.cpu:
+    desc: Run docker container with cpu support, rolling version
+    cmd: docker compose run --rm rolling_cpu
+    silent: true
+  ruff:
+    desc: Run ruff
+    cmds:
+      - ruff check --fix
+      - ruff format
+    silent: true
+  type-check:
+    desc: Check type by pyright
+    cmds:
+      - uv tool run pyright
+    silent: true
+  push:
+    desc: git push
+    cmds:
+      - git add .
+      - git commit
+      - git push origin $(git rev-parse --abbrev-ref HEAD)
+    silent: false
+  pull:
+    desc: git pull
+    cmd: git pull origin $(git rev-parse --abbrev-ref HEAD)
+    silent: false

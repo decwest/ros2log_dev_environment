@@ -39,7 +39,7 @@ tasks:
     desc: git push
     cmds:
       - git add .
-      - git commit
+      - git commit -s
       - git push origin $(git rev-parse --abbrev-ref HEAD)
     silent: false
   pull:

@@ -11,7 +11,8 @@ RUN echo base image: ${base_image}
 ##                      install common packages                      ##
 #######################################################################
 ENV DEBIAN_FRONTEND=noninteractive
-RUN apt update && apt install -y --no-install-recommends \
+RUN apt update && apt full-upgrade -y
+RUN apt install -y --no-install-recommends \
    pkg-config \
    apt-utils \
    wget \

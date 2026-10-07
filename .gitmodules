@@ -1,3 +1,15 @@
 [submodule "ros2cli"]
 	path = ros2cli
 	url = git@github.com:fujitatomoya/ros2cli.git
+[submodule "rcutils"]
+	path = rcutils
+	url = https://github.com/decwest/rcutils.git
+	branch = feature/logger-registry
+[submodule "rclcpp"]
+	path = rclcpp
+	url = https://github.com/decwest/rclcpp.git
+	branch = feature/logger-registry
+[submodule "rclpy"]
+	path = rclpy
+	url = https://github.com/decwest/rclpy.git
+	branch = feature/logger-registry

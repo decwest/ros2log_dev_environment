@@ -13,3 +13,7 @@
 	path = rclpy
 	url = https://github.com/decwest/rclpy.git
 	branch = feature/logger-registry
+[submodule "rcl_interfaces"]
+	path = rcl_interfaces
+	url = https://github.com/decwest/rcl_interfaces.git
+	branch = feature/logger-registry

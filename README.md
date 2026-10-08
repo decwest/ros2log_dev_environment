@@ -44,9 +44,10 @@ task run.rolling.cpu
 ## Logger registry development
 
 The `feature/logger-registry` branch adds process-local logger-name registration
-and enumeration in `rcutils`, with automatic registration in `rclcpp` and `rclpy`.
+and enumeration in `rcutils`, with automatic registration and `list_loggers`
+services in `rclcpp` and `rclpy`.
 It uses ROS 2 Rolling on Ubuntu 26.04 (Resolute). The source revisions are pinned
-by the `rcutils`, `rclcpp`, and `rclpy` submodules.
+by the `rcutils`, `rcl_interfaces`, `rclcpp`, and `rclpy` submodules.
 See [validation and reproducibility](docs/logger_registry_validation.md) for
 the source commits, image digests, test results, and runtime library checks.
 
@@ -67,8 +68,9 @@ the test dependencies. Source builds use `build-rolling-registry`,
 the previous workspace's build artifacts are not reused. Both CPU and GPU
 services mount the same source repositories and overlay.
 
-`registry.test` runs the logging-related tests of the three libraries and the
-ros2log functional regression suite (pytest's `linter` marker is excluded).
+`registry.test` runs the interface checks, logging-related tests of the three
+libraries, and the ros2log functional regression suite (pytest's `linter` marker
+is excluded).
 The existing ros2log checkout has an unrelated flake8 F841 warning at
 `ros2log/verb/watch.py:110` (`watcher` is assigned but never used); it is preserved.
 Tests use domain 217 and local discovery. A new
@@ -85,6 +87,58 @@ del child
 print(get_logger_names('example'))
 # ['example', 'example.vision'] -- no log message needs to be emitted
 PY
+```
+
+### ListLoggers service
+
+Nodes constructed with `enable_logger_service=True` (Python) or
+`NodeOptions().enable_logger_service(true)` (C++) expose
+`<node>/list_loggers` alongside the existing get/set logger-level services.
+The type is `rcl_interfaces/srv/ListLoggers`, with an empty request and a
+`string[] names` response.
+
+The service queries the registry using the node's actual logger name as the
+base, including namespace and remapping. It returns exact matches and
+dot-separated descendants, sorted without duplicates. Logger objects need not
+emit a message or remain alive, and rosout can be disabled. The service reads
+the current registry on each request and does not change any logger levels.
+
+There is no system-logger exclusion list or node-ownership tracking. An
+independently created logger whose name matches the hierarchy is included.
+For example, a service with base `foo` includes `foo.bar` even if that name is
+another node's logger in the same process; it does not include `foobar`.
+
+To try the service, start a container with `task run.rolling.cpu`, then run:
+
+```bash
+python3 - <<'PY'
+import rclpy
+from rclpy.executors import ExternalShutdownException
+
+with rclpy.init():
+    node = rclpy.create_node(
+        'logger_demo', namespace='/robot',
+        enable_logger_service=True, enable_rosout=False)
+    child = node.get_logger().get_child('vision')
+    try:
+        rclpy.spin(node)
+    except (KeyboardInterrupt, ExternalShutdownException):
+        pass
+    finally:
+        node.destroy_node()
+PY
+```
+
+In a second container started with the same Task:
+
+```bash
+ros2 service call /robot/logger_demo/list_loggers rcl_interfaces/srv/ListLoggers '{}'
+# names: ['robot.logger_demo', 'robot.logger_demo.vision']
+ros2 service call /robot/logger_demo/get_logger_levels rcl_interfaces/srv/GetLoggerLevels \
+  '{names: [robot.logger_demo.vision]}'
+# level: 0 (UNSET; the child inherits its effective level)
+ros2 service call /robot/logger_demo/set_logger_levels rcl_interfaces/srv/SetLoggerLevels \
+  '{levels: [{name: robot.logger_demo.vision, level: 10}]}'
 ```
 
 ### API contract
@@ -126,5 +180,5 @@ registering an empty name is a no-op, while an empty enumeration filter is inval
 Registration and enumeration synchronize with each other; callers must serialize
 logging initialization/shutdown and configuration against these operations.
 
-`ListLoggers.srv`, node attribution, effective-level services, and
-`ros2 log describe` are not included in this stage.
+Node attribution, effective-level services, and `ros2 log describe` are not
+included in this stage.

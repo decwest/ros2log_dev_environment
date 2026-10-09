@@ -48,6 +48,8 @@ and enumeration in `rcutils`, with automatic registration and `list_loggers`
 services in `rclcpp` and `rclpy`.
 It uses ROS 2 Rolling on Ubuntu 26.04 (Resolute). The source revisions are pinned
 by the `rcutils`, `rcl_interfaces`, `rclcpp`, and `rclpy` submodules.
+For a high-level explanation in Japanese, see the
+[implementation overview](docs/logger_registry_overview_ja.md).
 See [validation and reproducibility](docs/logger_registry_validation.md) for
 the source commits, image digests, test results, and runtime library checks.
 

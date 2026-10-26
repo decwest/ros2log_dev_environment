@@ -14,7 +14,7 @@ tasks:
   build.rolling:
     desc: Build docker image, rolling version
     deps: [gen-env]
-    cmd: docker compose build rolling_gpu
+    cmd: docker compose build --pull rolling_cpu
     silent: true
   run.rolling.gpu:
     desc: Run docker container with gpu support, rolling version
@@ -24,6 +24,12 @@ tasks:
     desc: Run docker container with cpu support, rolling version
     cmd: docker compose run --rm rolling_cpu
     silent: true
+  registry.build:
+    desc: Build the logger registry overlay using a separate build directory
+    cmd: docker compose run --rm -T rolling_cpu bash /home/ubuntu/ros2log_scripts/registry_workspace.bash build
+  registry.test:
+    desc: Run logging tests and ros2log regression tests
+    cmd: docker compose run --rm -T rolling_cpu bash /home/ubuntu/ros2log_scripts/registry_workspace.bash test
   ruff:
     desc: Run ruff
     cmds:

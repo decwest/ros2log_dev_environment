@@ -1,11 +1,8 @@
-FROM osrf/ros:rolling-desktop-full
+FROM osrf/ros:rolling-desktop-full-resolute
 ARG SHELL=/bin/bash
 ARG workspace=/
 
-ENV ROS_DISTRO rolling
-ENV USER ${USER}
-
-RUN echo base image: ${base_image}
+ENV ROS_DISTRO=rolling
 
 #######################################################################
 ##                      install common packages                      ##
@@ -18,7 +15,7 @@ RUN apt install -y --no-install-recommends \
    wget \
    curl \
    git \
-   build-essential \ 
+   build-essential \
    net-tools \
    gedit \
    terminator \
@@ -34,6 +31,9 @@ RUN apt install -y --no-install-recommends \
    usbutils \
    sudo \
    python3-pip \
+   python3-vcstool \
+   python3-pytest-timeout \
+   python3-pytest-asyncio \
    libusb-1.0-0-dev \
    gnupg2 \
    lsb-release \
@@ -47,7 +47,10 @@ RUN apt install -y --no-install-recommends \
 
 RUN apt install -y python3-colcon-clean
 RUN apt install -y qt6-base-dev qt6-declarative-dev qt6-scxml-dev qt6-svg-dev qt6-tools-dev qt6-tools-dev-tools
-RUN apt install -y ros-${ROS_DISTRO}-ament-cmake-google-benchmark
+RUN apt install -y ros-${ROS_DISTRO}-ament-cmake-google-benchmark \
+    ros-${ROS_DISTRO}-performance-test-fixture ros-${ROS_DISTRO}-test-msgs \
+    ros-${ROS_DISTRO}-mimick-vendor ros-${ROS_DISTRO}-osrf-testing-tools-cpp \
+    python3-typeshed
 
 #######################################################################
 ##                            delete cash                            ##
@@ -63,6 +66,7 @@ ARG USER=developer
 ARG UID=1000
 ARG GID=1000
 ARG GROUP=developer
+ENV USER=${USER}
 
 RUN set -eux; \
     # 既存UID/GIDの再利用
